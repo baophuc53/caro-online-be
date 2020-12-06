@@ -1,0 +1,10 @@
+{
+    "mysql": {
+      "connectionLimit":10,
+      "user": "root",
+      "database": "carodb",
+      "password": "123456",
+      "host": "localhost",
+      "port": 3306
+    }
+  }
