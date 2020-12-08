@@ -50,13 +50,14 @@ io.on("connection", (socket) => {
       for (let i in socketArr) {
         if (socketArr[i].id == tokenUser.id) {
           socketArr[i].exist = socketArr[i].exist + 1;
+          socketArr[i].socketID.push(socket.id);
           exist = socketArr[i].exist;
           break;
         }
       }
     }
     if (exist == 1) {
-      tokenUser.socketID = socket.id;
+      tokenUser.socketID = [socket.id];
       tokenUser.exist = exist;
       socketArr.push(tokenUser);
     }
@@ -68,15 +69,20 @@ io.on("connection", (socket) => {
     console.log(socket.id);
     if (socketArr.length > 0) {
       for (let i in socketArr) {
-        console.log(socketArr[i].socketID);
-        if (socketArr[i].socketID == socket.id) {
-          if (socketArr[i].exist == 1){
+        let list_socket_id = socketArr[i].socketID;
+        if (list_socket_id.length > 1) {
+          for (let j in list_socket_id){
+            if (list_socket_id[j] == socket.id) {
+              list_socket_id.splice(j, 1);
+              socketArr[i].exist = socketArr[i].exist - 1;
+              console.log("da giam trong list");
+              break;
+            }
+          }
+        } else if (list_socket_id[0] == socket.id){
           socketArr.splice(i, 1);
+          console.log("da xoa ra khoi list");
           break;
-          }
-          else{
-            socketArr[i].exist = socketArr[i].exist - 1;
-          }
         }
       }
     }
