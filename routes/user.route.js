@@ -8,16 +8,9 @@ router.post("/", async (req, res) => {
     const { username, password } = req.body;
     const dat = await userModel.loadByUserName(username);
     if (dat && await bcrypt.compare(password, dat.password)) {
-<<<<<<< Updated upstream
-            const token = jwt.sign({dat}, "secret");
-            req.session.token = token;
-            // console.log(req.session);
-
-=======
             const token = jwt.sign({ dat }, "secret");
             req.session.token = token;
             // console.log(req.session);
->>>>>>> Stashed changes
             res.json({
                 code: 0,
                 data: {
