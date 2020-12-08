@@ -6,7 +6,7 @@ const session = require("express-session");
 const logger = require("morgan");
 const mdw = require("./middlewares/route.mdw");
 
-//app.use(cors({origin:"http://localhost:3000",credentials:true}));
+app.use(cors({origin:"http://localhost:3000",credentials:true}));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cookieParser());

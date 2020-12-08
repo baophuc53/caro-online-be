@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const adminModel = require("../models/admin.model")
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 //login
 router.post("/", async (req, res) => {
