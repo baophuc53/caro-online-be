@@ -11,11 +11,11 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://play-caroo.herokuapp.com",
     credentials: true,
   },
 });
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: "https://play-caroo.herokuapp.com", credentials: true }));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cookieParser());
