@@ -6,16 +6,17 @@ const session = require("express-session");
 const logger = require("morgan");
 const mdw = require("./middlewares/route.mdw");
 const jwt = require("jsonwebtoken");
+const config = require("./config/config.json");
 
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "https://play-caroo.herokuapp.com",
+    origin: config.dev.path,
     credentials: true,
   },
 });
-app.use(cors({ origin: "https://play-caroo.herokuapp.com", credentials: true }));
+app.use(cors({ origin: config.dev.path, credentials: true }));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cookieParser());
