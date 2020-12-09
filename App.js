@@ -31,19 +31,17 @@ app.use(_session);
 
 let user;
 
-app.post("/", (req, res) => {
-  const token = req.body.token;
-  if (token) {
-    const decoded = jwt.verify(req.session.token, "secret");
-    user = decoded.dat;
-  }
-  console.log(user);
-});
-
 let socketArr = [];
 
 io.on("connection", (socket) => {
   console.log("a user connected");
+  socket.on("token", (data) => {
+    const token = data;
+    if (token) {
+      const decoded = jwt.verify(token, "secret");
+      user = decoded.dat;
+    }
+  });
   let tokenUser = user ? user : null;
   if (tokenUser) {
     let exist = 1;
@@ -72,7 +70,7 @@ io.on("connection", (socket) => {
       for (let i in socketArr) {
         let list_socket_id = socketArr[i].socketID;
         if (list_socket_id.length > 1) {
-          for (let j in list_socket_id){
+          for (let j in list_socket_id) {
             if (list_socket_id[j] == socket.id) {
               list_socket_id.splice(j, 1);
               socketArr[i].exist = socketArr[i].exist - 1;
@@ -80,7 +78,7 @@ io.on("connection", (socket) => {
               break;
             }
           }
-        } else if (list_socket_id[0] == socket.id){
+        } else if (list_socket_id[0] == socket.id) {
           socketArr.splice(i, 1);
           console.log("da xoa ra khoi list");
           break;
