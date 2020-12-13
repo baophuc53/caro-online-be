@@ -36,33 +36,32 @@ let socketArr = [];
 io.on("connection", (socket) => {
   console.log("a user connected");
   socket.on("token", (data) => {
-    const token = data;
-    if (token) {
-      const decoded = jwt.verify(token, "secret");
-      user = decoded.dat;
-    }
-  });
-  let tokenUser = user ? user : null;
-  if (tokenUser) {
-    let exist = 1;
-    if (socketArr.length > 0) {
-      for (let i in socketArr) {
-        if (socketArr[i].id == tokenUser.id) {
-          socketArr[i].exist = socketArr[i].exist + 1;
-          socketArr[i].socketID.push(socket.id);
-          exist = socketArr[i].exist;
-          break;
+    const decoded = jwt.verify(data, "secret");
+    user = decoded.dat;
+    // console.log(user);
+    let tokenUser = user ? user : null;
+    if (tokenUser) {
+      let exist = 1;
+      if (socketArr.length > 0) {
+        for (let i in socketArr) {
+          if (socketArr[i].id == tokenUser.id) {
+            socketArr[i].exist = socketArr[i].exist + 1;
+            socketArr[i].socketID.push(socket.id);
+            exist = socketArr[i].exist;
+            break;
+          }
         }
       }
-    }
-    if (exist == 1) {
-      tokenUser.socketID = [socket.id];
-      tokenUser.exist = exist;
-      socketArr.push(tokenUser);
+      if (exist == 1) {
+        tokenUser.socketID = [socket.id];
+        tokenUser.exist = exist;
+        socketArr.push(tokenUser);
+      }
     }
     console.log(socketArr);
-    io.sockets.emit("send-online-user-list", socketArr);
-  }
+    io.emit("send-online-user-list", socketArr);
+  });
+
   socket.on("disconnect", () => {
     console.log("--------------user disconnected----------------------");
     console.log(socket.id);
@@ -85,7 +84,7 @@ io.on("connection", (socket) => {
         }
       }
     }
-    io.sockets.emit("send-online-user-list", socketArr);
+    io.emit("send-online-user-list", socketArr);
   });
 });
 

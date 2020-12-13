@@ -8,6 +8,6 @@
         "port": 3306
     },
     "dev": {
-        "path": "https://play-caroo.herokuapp.com"
+        "path": "http://localhost:3000"
     }
 }
