@@ -5,7 +5,12 @@ module.exports = {
     loadById: async (id) => {
         const row = await db.load("SELECT * FROM room WHERE id = ?", id)
     },
-
+    loadByJoinCode: async(join_code) => {
+        const rows = await db.load(`SELECT * FROM room WHERE join_code = ?`, join_code);
+        if (rows.lenght === 0)
+            return null;
+        return rows[0];
+    },
     add: (entity) => db.add("room", entity)
 
 }
