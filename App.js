@@ -32,7 +32,7 @@ app.use(_session);
 let user;
 
 let socketArr = [];
-
+let UserID;
 io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
   socket.on("token", (data) => {
@@ -42,6 +42,7 @@ io.on("connection", (socket) => {
     let tokenUser = user ? user : null;
     if (tokenUser) {
       let exist = 1;
+      UserID = tokenUser;
       if (socketArr.length > 0) {
         for (let i in socketArr) {
           if (socketArr[i].id == tokenUser.id) {
@@ -61,7 +62,11 @@ io.on("connection", (socket) => {
     console.log(socketArr);
     io.emit("send-online-user-list", socketArr);
   });
-
+  socket.on("send-chat-message", (data) => {
+    console.log("send-chat-message ", data);
+    socket.broadcast.emit("chat-message", data);
+  });
+  
   socket.on("disconnect", () => {
     console.log("a user disconnected: " + socket.id);
     if (socketArr.length > 0) {
