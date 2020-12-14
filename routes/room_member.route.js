@@ -1,25 +1,22 @@
 const router = require("express").Router();
-const roomModel = require("../models/room.model");
+const roomMemberModel = require("../models/room_member.model");
 const jwt = require("jsonwebtoken");
-const cryptoRandomString = require("crypto-random-string");
 
-router.post("/new-room", async (req, res) => {
+router.post("/join-room", async (req, res) => {
   const entity = req.body;
-  entity.join_code = cryptoRandomString({ length: 8, type: "alphanumeric" });
-  console.log(req.headers.token);
   const token = req.headers.token;
   if (token) {
     const decoded = jwt.verify(token, "secret");
     const user = decoded.dat;
-    entity.owner = user.username;
-    await roomModel
+    entity.user_id = user.id;
+    console.log(entity);
+    await roomMemberModel
       .add(entity)
       .then((response) => {
         res.json({
           code: 0,
           data: {
             id: response.insertId,
-            join_code: entity.join_code,
           },
         });
       })
@@ -40,27 +37,6 @@ router.post("/new-room", async (req, res) => {
       },
     });
   }
-});
-
-router.get("/room-by-join-code", async (req, res) => {
-  const entity = req.query;
-  console.log(req.query);
-  const rows = await roomModel.loadByJoinCode(entity.join_code);
-  if (rows) {
-    res.json({
-      code: 0,
-      data: {
-        room_id: rows.id,
-      },
-    });
-  }
-
-  res.json({
-    code: 1,
-    data: {
-      message: "No room !",
-    },
-  });
 });
 
 module.exports = router;

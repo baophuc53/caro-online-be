@@ -34,7 +34,7 @@ let user;
 let socketArr = [];
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  console.log("a user connected: " + socket.id);
   socket.on("token", (data) => {
     const decoded = jwt.verify(data, "secret");
     user = decoded.dat;
@@ -63,8 +63,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("--------------user disconnected----------------------");
-    console.log(socket.id);
+    console.log("a user disconnected: " + socket.id);
     if (socketArr.length > 0) {
       for (let i in socketArr) {
         let list_socket_id = socketArr[i].socketID;
