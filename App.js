@@ -7,6 +7,7 @@ const logger = require("morgan");
 const mdw = require("./middlewares/route.mdw");
 const jwt = require("jsonwebtoken");
 const config = require("./config/config.json");
+const roomMemberModel = require("./models/room_member.model");
 
 const app = express();
 const server = require("http").createServer(app);
@@ -32,6 +33,7 @@ app.use(_session);
 let user;
 
 let socketArr = [];
+
 let UserID;
 io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
@@ -66,7 +68,23 @@ io.on("connection", (socket) => {
     console.log("send-chat-message ", data);
     socket.broadcast.emit("chat-message", data);
   });
-  
+
+  socket.on("swap-turn", async (room) => {
+    console.log(socket.id);
+    console.log(room);
+    const members = await roomMemberModel.loadByRoomId(room);
+    members.forEach((m) => {
+      const user = socketArr.filter((s) => s.id === m.user_id);
+      if (user && !user[0].socketID.includes(socket.id)) {
+        console.log(user[0].id);
+        user[0].socketID.forEach((s) => {
+          console.log(s);
+          io.to(s).emit("get-turn", room)
+        });
+      }
+    });
+  });
+
   socket.on("disconnect", () => {
     console.log("a user disconnected: " + socket.id);
     if (socketArr.length > 0) {

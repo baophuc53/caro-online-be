@@ -63,4 +63,25 @@ router.get("/room-by-join-code", async (req, res) => {
   });
 });
 
+//user send their play
+router.post("/play", async (req, res) => {
+  await roomModel.changeHistory(
+    req.body.room_id,
+    JSON.stringify(req.body.data)
+  );
+  res.json({
+    code: 0,
+  });
+});
+
+//user get game board
+router.get("/play", async (req, res) => {
+  const rows = await roomModel.loadById(req.query.room_id);
+  console.log(rows[0].history);
+  res.json({
+    code: 0,
+    data: rows[0].history
+  })
+})
+
 module.exports = router;
