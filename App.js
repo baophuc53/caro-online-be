@@ -35,6 +35,7 @@ let user;
 let socketArr = [];
 
 let UserID;
+let roomID;
 io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
   socket.on("token", (data) => {
@@ -64,9 +65,16 @@ io.on("connection", (socket) => {
     console.log(socketArr);
     io.emit("send-online-user-list", socketArr);
   });
+  
+  socket.on("room", (room) => {
+    console.log("room id la", room);
+    roomID= room;
+    socket.join(room);
+  });
+
   socket.on("send-chat-message", (data) => {
     console.log("send-chat-message ", data);
-    socket.broadcast.emit("chat-message", data);
+    socket.broadcast.to(roomID).emit("chat-message", data);
   });
 
   socket.on("swap-turn", async (room) => {
