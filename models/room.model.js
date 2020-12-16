@@ -11,9 +11,9 @@ module.exports = {
     },
     add: (entity) => db.add("room", entity),
 
-    changeHistory: (id, history) => {
+    changeHistory: (id, history, next_user_turn) => {
         const condition = { id };
-        db.patch("room", {history}, condition);
+        db.patch("room", {history, next_user_turn}, condition);
     }
 
 
