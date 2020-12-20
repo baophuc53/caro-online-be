@@ -8,6 +8,8 @@ const mdw = require("./middlewares/route.mdw");
 const jwt = require("jsonwebtoken");
 const config = require("./config/config.json");
 const roomMemberModel = require("./models/room_member.model");
+const passport = require("passport");
+require("./passport");
 
 const app = express();
 const server = require("http").createServer(app);
@@ -29,6 +31,7 @@ const _session = session({
   saveUninitialized: true,
 });
 app.use(_session);
+app.use(passport.initialize());
 
 let user;
 
