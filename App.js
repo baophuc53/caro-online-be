@@ -86,6 +86,7 @@ io.on("connection", (socket) => {
     const members = await roomMemberModel.loadByRoomId(room);
     members.forEach((m) => {
       const user = socketArr.filter((s) => s.id === m.user_id);
+      // console.log(user[0]);
       if (user && !user[0].socketID.includes(socket.id)) {
         console.log(user[0].id);
         user[0].socketID.forEach((s) => {

@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const userModel = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const { async } = require("crypto-random-string");
 
 //login
 router.post("/", async (req, res) => {
@@ -86,30 +85,6 @@ router.put("/", async (req, res) => {
       });
     }
   })(req, res);
-  // const entity = req.body;
-  // bcrypt.hash(entity.password, 10).then(async (hash) => {
-  //   console.log(hash);
-  //   entity.password = hash;
-  //   await userModel
-  //     .add(entity)
-  //     .then((response) => {
-  //       res.json({
-  //         code: 0,
-  //         data: {
-  //           id: response.insertId,
-  //         },
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //       res.json({
-  //         code: 1,
-  //         data: {
-  //           message: "Fail to add user!",
-  //         },
-  //       });
-  //     });
-  // });
 });
 
 module.exports = router;
