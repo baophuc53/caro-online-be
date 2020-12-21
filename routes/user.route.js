@@ -9,8 +9,6 @@ router.post("/", async (req, res) => {
   const dat = await userModel.loadByUserName(username);
   if (dat && (await bcrypt.compare(password, dat.password))) {
     const token = jwt.sign({ dat: {id: dat.id, username, nickname: dat.nickname } }, "secret");
-    req.session.token = token;
-    // console.log(req.session);
 
     res.json({
       code: 0,

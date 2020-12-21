@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
 module.exports = {
+    getUserFromToken: (token) => {
+        const decoded = jwt.verify(token, "secret");
+        return decoded.dat;
+    },
+
     getIdFromToken: (token) => {
-        const dat = jwt.verify(token, 'secret');
-        return dat.id;
+        const decoded = jwt.verify(token, "secret");
+        return decoded.dat.id;
     }
 }
