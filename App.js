@@ -71,7 +71,7 @@ io.on("connection", (socket) => {
     members.forEach((m) => {
       const socket_m = socketMap.get(m.user_id);
       if (socket_m && socket_m!==socket.id) {
-        io.to(socket_m).emit("get-turn", room)
+        io.to(socket_m).emit("get-turn", "continue")
       }
     });
   });
@@ -80,7 +80,6 @@ io.on("connection", (socket) => {
     console.log("a user disconnected: " + socket.id);
     const user = userMap.get(socket.id);
     if (user) {
-      socket.broadcast.to(roomID).emit("user-disconnect", "User disconnected!");
       userArr.splice(userArr.indexOf(user.nickname), 1);
       userMap.delete(socket.id);
       socketMap.delete(user.id);
