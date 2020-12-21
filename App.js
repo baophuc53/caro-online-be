@@ -7,7 +7,7 @@ const logger = require("morgan");
 const mdw = require("./middlewares/route.mdw");
 const config = require("./config/config.json");
 const roomMemberModel = require("./models/room_member.model");
-const helper  = require("./helpers/helper");
+const helper = require("./helpers/helper");
 const passport = require("passport");
 require("./passport");
 
@@ -43,19 +43,19 @@ io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
   socket.on("token", (data) => {
     user = helper.getUserFromToken(data);
-    console.log(user);
-    if (user && !userArr.includes({nickname: user.nickname})) {
-      userArr.push({nickname: user.nickname});
+    const checkUser = userArr.filter((x) => x.nickname === user.nickname);
+    if (user) {
+      if (checkUser.length === 0) userArr.push({ nickname: user.nickname });
       socketMap.set(user.id, socket.id);
       userMap.set(socket.id, user);
     }
     console.log(userArr);
     io.emit("send-online-user-list", userArr);
   });
-  
+
   socket.on("room", (room) => {
     console.log("room id la", room);
-    roomID= room;
+    roomID = room;
     socket.join(room);
   });
 
@@ -71,7 +71,7 @@ io.on("connection", (socket) => {
     members.forEach((m) => {
       const socket_m = socketMap.get(m.user_id);
       if (socket_m && socket_m!==socket.id) {
-          io.to(socket_m).emit("get-turn", room)
+        io.to(socket_m).emit("get-turn", room)
       }
     });
   });
@@ -80,6 +80,7 @@ io.on("connection", (socket) => {
     console.log("a user disconnected: " + socket.id);
     const user = userMap.get(socket.id);
     if (user) {
+      socket.broadcast.to(roomID).emit("user-disconnect", "User disconnected!");
       userArr.splice(userArr.indexOf(user.nickname), 1);
       userMap.delete(socket.id);
       socketMap.delete(user.id);
