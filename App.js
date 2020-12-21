@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
     console.log("a user disconnected: " + socket.id);
     const user = userMap.get(socket.id);
     if (user) {
-      userArr.splice(userArr.indexOf(user.nickname), 1);
+      userArr.splice(userArr.findIndex(x => x.nickname === user.nickname), 1);
       userMap.delete(socket.id);
       socketMap.delete(user.id);
     }
