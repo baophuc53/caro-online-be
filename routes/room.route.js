@@ -1,57 +1,38 @@
 const router = require("express").Router();
 const roomModel = require("../models/room.model");
 const roomMemberModel = require("../models/room_member.model");
-const jwt = require("jsonwebtoken");
 const cryptoRandomString = require("crypto-random-string");
-const passport = require("passport");
+const auth_jwt = require("../middlewares/auth.mdw")
 
-router.post("/new-room", async (req, res) => {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
-    console.log(user);
-    if (err) {
+router.post("/new-room", auth_jwt, async (req, res) => {
+  const entity = req.body;
+  const user = req.user;
+  entity.join_code = cryptoRandomString({
+    length: 8,
+    type: "alphanumeric",
+  });
+  entity.owner = user.username;
+  entity.next_user_turn = user.id;
+  await roomModel
+    .add(entity)
+    .then((response) => {
       return res.json({
-        code: 3,
+        code: 0,
         data: {
-          message: "Something was wrong!",
+          id: response.insertId,
+          join_code: entity.join_code,
         },
       });
-    } else if (!user && info != undefined) {
+    })
+    .catch((err) => {
+      console.log(err);
       return res.json({
-        code: 2,
+        code: 1,
         data: {
-          message: "Not a valid user",
+          message: "Fail to create new room!",
         },
       });
-    } else {
-      const entity = req.body;
-      entity.join_code = cryptoRandomString({
-        length: 8,
-        type: "alphanumeric",
-      });
-      entity.owner = user.username;
-      entity.next_user_turn = user.id;
-      await roomModel
-        .add(entity)
-        .then((response) => {
-          return res.json({
-            code: 0,
-            data: {
-              id: response.insertId,
-              join_code: entity.join_code,
-            },
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-          return res.json({
-            code: 1,
-            data: {
-              message: "Fail to create new room!",
-            },
-          });
-        });
-    }
-  })(req, res);
+    });
 });
 
 router.get("/room-by-join-code", async (req, res) => {
@@ -76,41 +57,23 @@ router.get("/room-by-join-code", async (req, res) => {
 });
 
 //user send their play
-router.post("/play", async (req, res) => {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
-    console.log(user);
-    if (err) {
-      return res.json({
-        code: 3,
-        data: {
-          message: "Something was wrong!",
-        },
-      });
-    } else if (!user && info != undefined) {
-      return res.json({
-        code: 2,
-        data: {
-          message: "Not a valid user",
-        },
-      });
-    } else {
-      let next_user_turn = 0;
-      console.log(req.body.room_id);
-      const members = await roomMemberModel.loadByRoomId(req.body.room_id);
-      console.log(members);
-      members.forEach((m) => {
-        if (m.user_id !== user.id) next_user_turn = m.user_id;
-      });
-      await roomModel.changeHistory(
-        req.body.room_id,
-        JSON.stringify(req.body.data),
-        next_user_turn
-      );
-      return res.json({
-        code: 0,
-      });
-    }
-  })(req, res);
+router.post("/play", auth_jwt, async (req, res) => {
+  let next_user_turn = 0;
+  const user = req.user;
+  console.log(req.body.room_id);
+  const members = await roomMemberModel.loadByRoomId(req.body.room_id);
+  console.log(members);
+  members.forEach((m) => {
+    if (m.user_id !== user.id) next_user_turn = m.user_id;
+  });
+  await roomModel.changeHistory(
+    req.body.room_id,
+    JSON.stringify(req.body.data),
+    next_user_turn
+  );
+  return res.json({
+    code: 0,
+  });
 });
 
 //user get game board
@@ -125,41 +88,23 @@ router.get("/play", async (req, res) => {
 });
 
 //user check their turn
-router.post("/turn", async (req, res) => {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
-    console.log(user);
-    if (err) {
-      return res.json({
-        code: 3,
-        data: {
-          message: "Something was wrong!",
-        },
-      });
-    } else if (!user && info != undefined) {
-      return res.json({
-        code: 2,
-        data: {
-          message: "Not a valid user",
-        },
-      });
-    } else {
-      const room = await roomModel.loadById(req.body.room_id);
-      console.log(user.id);
-      console.log(room[0].next_user_turn);
-      const goFirst = user.username === room[0].owner;
-      if (user.id === room[0].next_user_turn)
-        return res.json({
-          code: 0,
-          goFirst,
-        });
-      else {
-        return res.json({
-          code: 1,
-          goFirst,
-        });
-      }
-    }
-  })(req, res);
+router.post("/turn", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const room = await roomModel.loadById(req.body.room_id);
+  console.log(user.id);
+  console.log(room[0].next_user_turn);
+  const goFirst = user.username === room[0].owner;
+  if (user.id === room[0].next_user_turn)
+    return res.json({
+      code: 0,
+      goFirst,
+    });
+  else {
+    return res.json({
+      code: 1,
+      goFirst,
+    });
+  }
 });
 
 module.exports = router;

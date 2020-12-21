@@ -1,49 +1,32 @@
 const router = require("express").Router();
 const roomMemberModel = require("../models/room_member.model");
-const passport = require("passport");
+const auth_jwt = require("../middlewares/auth.mdw")
 
-router.post("/join-room", async (req, res) => {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
-    console.log(user);
-    if (err) {
-      return res.json({
-        code: 3,
+router.post("/join-room", auth_jwt, async (req, res) => {
+  const user = req.user;
+  console.log(user);
+  const entity = req.body;
+  entity.user_id = user.id;
+  console.log(entity);
+  await roomMemberModel
+    .add(entity)
+    .then((response) => {
+      res.json({
+        code: 0,
         data: {
-          message: "Something was wrong!",
+          id: response.insertId,
         },
       });
-    } else if (!user && info != undefined) {
-      return res.json({
-        code: 2,
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({
+        code: 1,
         data: {
-          message: "Not a valid user",
+          message: "Fail to create new room!",
         },
       });
-    } else {
-      const entity = req.body;
-      entity.user_id = user.id;
-      console.log(entity);
-      await roomMemberModel
-        .add(entity)
-        .then((response) => {
-          res.json({
-            code: 0,
-            data: {
-              id: response.insertId,
-            },
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-          res.json({
-            code: 1,
-            data: {
-              message: "Fail to create new room!",
-            },
-          });
-        });
-    }
-  })(req, res);
+    });
 });
 
 module.exports = router;

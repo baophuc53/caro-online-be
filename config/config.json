@@ -1,6 +1,6 @@
 {
     "mysql": {
-        "connectionLimit": 10,
+        "connectionLimit": 50,
         "user": "YHp31sM2Ws",
         "database": "YHp31sM2Ws",
         "password": "xThZE8GWZ4",

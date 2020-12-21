@@ -1,15 +1,14 @@
+const passport = require("passport");
 
 module.exports = (req, res, next) => {
-    console.log(req.session);
-    const token = req.session.token;
-    if (
-      req.headers.token
-    ) {
-      next();
+  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
+    if (err) {
+      return next(err);
+    } else if (!user && info != undefined) {
+      return next(info);
     } else {
-      res.json({
-        code: 1,
-        message: "Authorize fail!",
-      });
+      req.user = user;
+      next();
     }
-  };
+  })(req, res, next);
+};
