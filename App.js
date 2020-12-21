@@ -8,6 +8,9 @@ const mdw = require("./middlewares/route.mdw");
 const config = require("./config/config.json");
 const roomMemberModel = require("./models/room_member.model");
 const helper  = require("./helpers/helper");
+const passport = require("passport");
+require("./passport");
+
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -28,6 +31,7 @@ const _session = session({
   saveUninitialized: true,
 });
 app.use(_session);
+app.use(passport.initialize());
 
 let user;
 

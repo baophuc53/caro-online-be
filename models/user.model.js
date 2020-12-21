@@ -8,8 +8,15 @@ module.exports = {
 
     loadById: async (id) => {
         const row = await db.load("SELECT * FROM user WHERE id = ?", id)
+        return row[0];
     },
 
-    add: (entity) => db.add("user", entity)
+    add: (entity) => db.add("user", entity),
+
+    editById: entity => {
+        const condition = {id: entity.id};
+        delete entity.id;
+        return db.patch("user", entity, condition);
+    }
 
 }
