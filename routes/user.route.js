@@ -88,7 +88,7 @@ router.put("/", async (req, res) => {
   })(req, res);
 });
 
-router.post("/login-with-google", async (req, res) => {
+router.post("/login-other", async (req, res) => {
   const profile = req.body;
   await userModel.loadByUserName(profile.username).then(user => {
     if (!user){
@@ -119,10 +119,10 @@ router.post("/login-with-google", async (req, res) => {
   })
 })
 
-router.post("/login-with-google/recieve-nickname", async (req, res) => {
+router.post("/login-other/recieve-nickname", async (req, res) => {
   console.log(req.body);
   const {nickname, profile} = req.body;
-  bcrypt.hash(profile.googleId, 10).then(async (hash) => {
+  bcrypt.hash(profile.socialId, 10).then(async (hash) => {
     await userModel
       .add({ username: profile.username, password: hash, nickname: nickname.nickname })
       .then((user) => {
