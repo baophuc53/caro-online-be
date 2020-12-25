@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const userModel = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
+const { async } = require("crypto-random-string");
 
 //login
 router.post("/", async (req, res) => {
@@ -86,5 +87,63 @@ router.put("/", async (req, res) => {
     }
   })(req, res);
 });
+
+router.post("/login-other", async (req, res) => {
+  const profile = req.body;
+  await userModel.loadByUserName(profile.username).then(user => {
+    if (!user){
+      return res.json({
+        code: 1,
+        data: {
+          profile: profile
+        }
+      })
+    } else {
+      const token = jwt.sign(
+        {
+          dat: {
+            id: user.id,
+            username: user.username,
+            nickname: user.nickname,
+          },
+        },
+        "secret"
+      );
+      return res.json({
+        code: 0,
+        data: {
+          token,
+        },
+      });
+    }
+  })
+})
+
+router.post("/login-other/recieve-nickname", async (req, res) => {
+  console.log(req.body);
+  const {nickname, profile} = req.body;
+  bcrypt.hash(profile.socialId, 10).then(async (hash) => {
+    await userModel
+      .add({ username: profile.username, password: hash, nickname: nickname.nickname })
+      .then((user) => {
+        const token = jwt.sign(
+          {
+            dat: {
+              id: user.insertId,
+              username: profile.username,
+              nickname: nickname.nickname,
+            },
+          },
+          "secret"
+        );
+        return res.json({
+          code: 0,
+          data: {
+            token,
+          },
+        });
+      });
+  });
+})
 
 module.exports = router;
