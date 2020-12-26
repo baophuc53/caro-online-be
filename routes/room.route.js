@@ -7,6 +7,7 @@ const helper = require("../helpers/helper");
 
 router.post("/new-room", auth_jwt, async (req, res) => {
   const entity = req.body;
+  console.log(entity);
   const user = req.user;
   entity.join_code = cryptoRandomString({
     length: 8,
@@ -85,13 +86,14 @@ router.post("/play", auth_jwt, async (req, res) => {
   });
 });
 
-//user get all room playing
+//user get all room
 router.get("/", auth_jwt, async (req, res) => {
   const user = req.user;
-  const rows = await roomModel.loadAllPlaying(user.username);
+  const waiting = await roomModel.loadAllWaiting(user.username);
+  const playing = await roomModel.loadAllPlaying(user.username);
   res.json({
     code: 0,
-    data: {rooms: rows}
+    data: {waiting, playing}
   })
 })
 

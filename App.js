@@ -42,11 +42,12 @@ let userMap = new Map();
 let roomMap = new Map();
 io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
+
   socket.on("token", (data) => {
     user = helper.getUserFromToken(data);
     const checkUser = userArr.filter((x) => x.nickname === user.nickname);
     if (user) {
-      if (checkUser.length === 0) userArr.push({ nickname: user.nickname });
+      if (checkUser.length === 0) userArr.push({id: user.id, nickname: user.nickname });
       socketMap.set(user.id, socket.id);
       userMap.set(socket.id, user);
     }
@@ -70,6 +71,17 @@ io.on("connection", (socket) => {
         socket.emit("end-waiting", room);
       }
     });
+  })
+
+  socket.on("invite", (inviteName) => {
+    console.log("onInvite");
+    const inviteUser = userArr.find((x) => x.nickname === inviteName);
+    if (inviteUser) {
+      const inviteSocket = socketMap.get(inviteUser.id);
+      const room = roomMap.get(socket.id);
+      const user = userMap.get(socket.id);
+      io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
+    }
   })
 
   socket.on("send-chat-message", (data) => {
