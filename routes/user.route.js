@@ -6,6 +6,8 @@ const passport = require("passport");
 const { OAuth2Client } = require("google-auth-library");
 const Axios = require("axios");
 const config = require("../config/config.json");
+const nodemailer = require("nodemailer");
+const cryptoRandomString = require("crypto-random-string");
 
 //login
 router.post("/", async (req, res) => {
@@ -23,22 +25,37 @@ router.post("/", async (req, res) => {
           message: "Login Fail",
         });
       } else {
-        const token = jwt.sign(
-          {
-            dat: {
-              id: user.id,
-              username: user.username,
-              nickname: user.nickname,
+        if (user.status === "inactivated") {
+          const email_token = jwt.sign(
+            {
+              email: user.email,
             },
-          },
-          "secret"
-        );
-        return res.json({
-          code: 0,
-          data: {
-            token,
-          },
-        });
+            config.secret
+          );
+          return res.json({
+            code: 3,
+            data: {
+              email_token: email_token,
+            },
+          });
+        } else {
+          const token = jwt.sign(
+            {
+              dat: {
+                id: user.id,
+                username: user.username,
+                nickname: user.nickname,
+              },
+            },
+            config.secret
+          );
+          return res.json({
+            code: 0,
+            data: {
+              token,
+            },
+          });
+        }
       }
     });
   })(req, res);
@@ -73,10 +90,16 @@ router.put("/", async (req, res) => {
         await userModel
           .editById(entity)
           .then(() => {
+            const email_token = jwt.sign(
+              {
+                email: entity.email,
+              },
+              config.secret
+            );
             return res.json({
               code: 0,
               data: {
-                id: entity.id,
+                email_token: email_token,
               },
             });
           })
@@ -109,25 +132,27 @@ router.post("/login-other", async (req, res) => {
       email = payload.email;
       break;
     case "facebook":
-      Axios.get("https://graph.facebook.com/debug_token?", {
+      let tempOpenId;
+      await Axios.get("https://graph.facebook.com/debug_token?", {
         params: {
           input_token: token,
           access_token: config.facebook_access_token,
         },
-      }).then((res) => {
-        console.log(res.data);
+      }).then(async (res) => {
+        // console.log(res.data);
         if (
           res.data.data.app_id === config.facebook_app_id &&
           res.data.data.is_valid
         ) {
           openId = res.data.data.user_id;
-          Axios.get(`https://graph.facebook.com/${openId}`, {
+          tempOpenId = openId;
+          await Axios.get(`https://graph.facebook.com/${openId}`, {
             params: {
-              fields:"id,email",
+              fields: "id,email",
               access_token: token,
             },
           }).then((res) => {
-            console.log(res.data);
+            // console.log(res.data);
             email = res.data.email;
           });
         } else {
@@ -143,6 +168,8 @@ router.post("/login-other", async (req, res) => {
     default:
     // throw { code: 3, data: { message: "Unauthorize" } };
   }
+
+  console.log(openId);
 
   const user = await userModel.loadByOpenId({ openId, platform });
   if (!user) {
@@ -181,6 +208,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
       email: profile.email,
       platform: profile.platform,
       open_id: profile.open_id,
+      status: 'activated'
     })
     .then((user) => {
       const token = jwt.sign(
@@ -200,6 +228,90 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
         },
       });
     });
+});
+
+router.post("/send-email", async (req, res) => {
+  const email = jwt.verify(req.body.email_token, config.secret).email;
+  console.log(email);
+
+  const otp = cryptoRandomString({
+    length: 8,
+    type: "numeric",
+  });
+
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    service: "Gmail",
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: "vophong1612@gmail.com", // generated ethereal user
+      pass: "Vothanhphong", // generated ethereal password
+    },
+  });
+
+  const mainOptions = {
+    // thiết lập đối tượng, nội dung gửi mail
+    from: "Caro Online",
+    to: email,
+    subject: "XÁC NHẬN EMAIL",
+    text:
+      "Mã OTP của bạn là: " +
+      otp +
+      ".\n Vui lòng không chia sẻ mã cho bất kỳ ai !",
+  };
+  transporter.sendMail(mainOptions, function (err, info) {
+    if (err) {
+      return res.json({
+        code: 1,
+        data: {
+          message: "Không thể gửi mã xác thực tới email của bạn !",
+        },
+      });
+    } else {
+      console.log("sent ok");
+      console.log("Message sent: " + info.response);
+      const otp_token = jwt.sign(
+        {
+          otp: otp,
+          email: email,
+        },
+        config.secret
+      );
+      return res.json({
+        code: 0,
+        data: {
+          otp_token: otp_token,
+        },
+      });
+    }
+  });
+});
+
+router.put("/activated", async (req, res) => {
+  const { otp_token, activate_code } = req.body;
+  if (otp_token) {
+    const { otp, email } = jwt.verify(otp_token, config.secret);
+    if (otp == activate_code) {
+      const entity = { email: email, status: "activated" };
+      await userModel
+        .editByEmail(entity)
+        .then(() => {
+          return res.json({
+            code: 0,
+          });
+        })
+        .catch((err) => {
+          return res.json({
+            code: 1,
+          });
+        });
+    } else {
+      console.log(otp);
+      return res.json({
+        code: 3,
+      });
+    }
+  }
 });
 
 module.exports = router;

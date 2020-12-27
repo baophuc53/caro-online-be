@@ -1,3 +1,4 @@
+const { async } = require("crypto-random-string");
 const db = require("../utils/db");
 
 module.exports = {
@@ -14,6 +15,11 @@ module.exports = {
     return row[0];
   },
 
+  loadByEmail: async (email) => {
+    const row = await db.load("SELECT * FROM user WHERE email = ?", email);
+    return row[0];
+  },
+
   add: (entity) => db.add("user", entity),
 
   editById: (entity) => {
@@ -21,6 +27,13 @@ module.exports = {
     delete entity.id;
     return db.patch("user", entity, condition);
   },
+
+  editByEmail: (entity) => {
+    const condition = {email: entity.email};
+    delete entity.email;
+    return db.patch("user", entity, condition);
+  },
+
   loadByOpenId: ({ openId, platform }) =>
     db.load(`SELECT * FROM user WHERE platform=? AND open_id=?`, [
       platform,
