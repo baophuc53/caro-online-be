@@ -10,7 +10,7 @@ const roomMemberModel = require("./models/room_member.model");
 const helper = require("./helpers/helper");
 const passport = require("passport");
 require("./passport");
-
+require("express-async-errors");
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -70,8 +70,8 @@ io.on("connection", (socket) => {
     const members = await roomMemberModel.loadByRoomId(room);
     members.forEach((m) => {
       const socket_m = socketMap.get(m.user_id);
-      if (socket_m && socket_m!==socket.id) {
-        io.to(socket_m).emit("get-turn", "continue")
+      if (socket_m && socket_m !== socket.id) {
+        io.to(socket_m).emit("get-turn", "continue");
       }
     });
   });
@@ -80,7 +80,10 @@ io.on("connection", (socket) => {
     console.log("a user disconnected: " + socket.id);
     const user = userMap.get(socket.id);
     if (user) {
-      userArr.splice(userArr.findIndex(x => x.nickname === user.nickname), 1);
+      userArr.splice(
+        userArr.findIndex((x) => x.nickname === user.nickname),
+        1
+      );
       userMap.delete(socket.id);
       socketMap.delete(user.id);
     }
@@ -89,6 +92,12 @@ io.on("connection", (socket) => {
 });
 
 mdw(app);
+
+app.use((req, res, next, err) => {
+  console.log(err);
+  if (isNaN(err.code)) err = { code: 1, data: { message: "Internal error" } };
+  res.json(err);
+});
 
 server.listen(process.env.PORT || 8000, () => {
   console.log("Web server running at http://localhost:8000");
