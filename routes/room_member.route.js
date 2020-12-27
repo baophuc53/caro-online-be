@@ -8,6 +8,13 @@ router.post("/join-room", auth_jwt, async (req, res) => {
   const entity = req.body;
   entity.user_id = user.id;
   console.log(entity);
+  const room_members = await roomMemberModel.loadByRoomId(entity.room_id);
+  if (room_members.length > 1) {
+    return res.json({
+      code: 1,
+      message: "Full"
+    })
+  }
   await roomMemberModel
     .add(entity)
     .then((response) => {

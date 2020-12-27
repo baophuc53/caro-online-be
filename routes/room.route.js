@@ -2,10 +2,12 @@ const router = require("express").Router();
 const roomModel = require("../models/room.model");
 const roomMemberModel = require("../models/room_member.model");
 const cryptoRandomString = require("crypto-random-string");
-const auth_jwt = require("../middlewares/auth.mdw")
+const auth_jwt = require("../middlewares/auth.mdw");
+const helper = require("../helpers/helper");
 
 router.post("/new-room", auth_jwt, async (req, res) => {
   const entity = req.body;
+  console.log(entity);
   const user = req.user;
   entity.join_code = cryptoRandomString({
     length: 8,
@@ -60,9 +62,9 @@ router.get("/room-by-join-code", async (req, res) => {
 router.post("/play", auth_jwt, async (req, res) => {
   let next_user_turn = 0;
   const user = req.user;
-  console.log(req.body.room_id);
+  console.log(user.id);
   const members = await roomMemberModel.loadByRoomId(req.body.room_id);
-  console.log(members);
+  
   members.forEach((m) => {
     if (m.user_id !== user.id) next_user_turn = m.user_id;
   });
@@ -71,10 +73,29 @@ router.post("/play", auth_jwt, async (req, res) => {
     JSON.stringify(req.body.data),
     next_user_turn
   );
+  
+  if (helper.calculateWinner(req.body.data.square, req.body.data.move)) {
+    await roomModel.setWinner(req.body.room_id, user.id);
+    return res.json({
+      code: 1,
+      message: "win",
+    });
+  }
   return res.json({
     code: 0,
   });
 });
+
+//user get all room
+router.get("/", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const waiting = await roomModel.loadAllWaiting(user.username);
+  const playing = await roomModel.loadAllPlaying(user.username);
+  res.json({
+    code: 0,
+    data: {waiting, playing}
+  })
+})
 
 //user get game board
 router.get("/play", async (req, res) => {
@@ -94,17 +115,28 @@ router.post("/turn", auth_jwt, async (req, res) => {
   console.log(user.id);
   console.log(room[0].next_user_turn);
   const goFirst = user.username === room[0].owner;
-  if (user.id === room[0].next_user_turn)
+  if (room[0].status === "waiting") {
     return res.json({
-      code: 0,
-      goFirst,
-    });
-  else {
-    return res.json({
-      code: 1,
-      goFirst,
-    });
+      code: 3,
+      goFirst
+    })
   }
+  if (room[0].winner === null) {
+    if (user.id === room[0].next_user_turn)
+      return res.json({
+        code: 0,
+        goFirst,
+      });
+    else {
+      return res.json({
+        code: 1,
+        goFirst,
+      });
+    }
+  }
+  return res.json({
+    code: 2,
+  });
 });
 
 module.exports = router;
