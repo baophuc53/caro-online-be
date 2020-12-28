@@ -8,6 +8,7 @@ const Axios = require("axios");
 const config = require("../config/config.json");
 const nodemailer = require("nodemailer");
 const cryptoRandomString = require("crypto-random-string");
+const { async } = require("crypto-random-string");
 
 //login
 router.post("/", async (req, res) => {
@@ -208,7 +209,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
       email: profile.email,
       platform: profile.platform,
       open_id: profile.open_id,
-      status: 'activated'
+      status: "activated",
     })
     .then((user) => {
       const token = jwt.sign(
@@ -253,7 +254,7 @@ router.post("/send-email", async (req, res) => {
     // thiết lập đối tượng, nội dung gửi mail
     from: "Caro Online",
     to: email,
-    subject: "XÁC NHẬN EMAIL",
+    subject: "MÃ XÁC THỰC TÀI KHOẢN",
     text:
       "Mã OTP của bạn là: " +
       otp +
@@ -311,6 +312,76 @@ router.put("/activated", async (req, res) => {
         code: 3,
       });
     }
+  }
+});
+
+router.get("/forgot-password/find-user", async (req, res) => {
+  const username = req.query.username;
+  await userModel.loadByUserName(username).then(async (user) => {
+    if (!user) {
+      return res.json({
+        code: 1,
+        data: {
+          message: "Không thể tìm thấy tài khoản!",
+        },
+      });
+    } else {
+      const email_token = jwt.sign(
+        {
+          email: user.email,
+        },
+        config.secret
+      );
+      let code, otp_token;
+      await Axios.post("http://localhost:8000/user/send-email", {
+        email_token: email_token,
+      }).then((result) => {
+        if (result.data.code === 0) {
+          code = 0;
+          otp_token = result.data.data.otp_token;
+        }
+      });
+      console.log(code);
+      return res.json({
+        code: code,
+        data: {
+          otp_token: otp_token,
+          email_token: email_token,
+        },
+      });
+    }
+  });
+});
+
+router.post("/forgot-password/change-password", async (req, res) => {
+  const { otp_token, activate_code, password } = req.body;
+  const otp_payload = jwt.verify(otp_token, config.secret);
+  const otp = otp_payload.otp;
+  const email = otp_payload.email;
+  console.log(otp, email);
+  if (otp === activate_code) {
+    bcrypt.hash(password, 10).then(async (hash) => {
+      await userModel
+        .editByEmail({ email: email, password: hash })
+        .then(() => {
+          return res.json({
+            code: 0,
+          });
+        })
+        .catch((err) => {
+          return res.json({
+            code: 1,
+            data: {
+              message: "Có gì đó không ổn!",
+            },
+          });
+        });
+    });
+  } else {
+    return res.json({
+      code: 2,
+      data: { message: "Mã xác thực không chính xác" },
+    });
   }
 });
 
