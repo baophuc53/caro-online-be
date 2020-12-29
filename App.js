@@ -40,6 +40,7 @@ let userArr = [];
 let socketMap = new Map();
 let userMap = new Map();
 let roomMap = new Map();
+let quickPlayArr = [];
 io.on("connection", (socket) => {
   console.log("a user connected: " + socket.id);
 
@@ -82,6 +83,32 @@ io.on("connection", (socket) => {
       const user = userMap.get(socket.id);
       io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
     }
+  })
+
+  socket.on("quick-play", async (message) => {
+    console.log(quickPlayArr);
+    if (quickPlayArr.length === 0)
+      quickPlayArr.push(userMap.get(socket.id));
+    else {
+      const user1 = userMap.get(socket.id);
+      const user2 = quickPlayArr.splice(0, 1);
+      const roomId = await helper.createQuickRoom(user1, user2[0]);
+      console.log("quick play: " + roomId);
+      if (roomId > 0) {
+        io.to(socketMap.get(user1.id)).emit("matched", roomId);
+        io.to(socketMap.get(user2[0].id)).emit("matched", roomId);
+      }
+    }
+  })
+
+  socket.on("cancel-quick-play", (messgae) => {
+    console.log("cancel-quick-play");
+    console.log(quickPlayArr);
+    const user = userMap.get(socket.id);
+    const index = quickPlayArr.findIndex(x => x.id === user.id);
+    if (index >= 0)
+      quickPlayArr.splice(index, 1);
+    console.log(quickPlayArr);
   })
 
   socket.on("send-chat-message", (data) => {
