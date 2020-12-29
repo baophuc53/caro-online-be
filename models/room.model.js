@@ -3,14 +3,14 @@ const db = require("../utils/db");
 module.exports = {
     loadAllWaiting: async (username) => {
         const data = await db.load(`SELECT room.id, name_room, nickname FROM user INNER JOIN room 
-                                        ON user.username = room.owner WHERE status = "waiting" 
+                                        ON user.username = room.owner WHERE room.status = "waiting" 
                                         AND private IS FALSE AND owner != ?`, username);
         return data;
     },
     
     loadAllPlaying: async (username) => {
         const data = await db.load(`SELECT room.id, name_room, nickname FROM user INNER JOIN room 
-                                        ON user.username = room.owner WHERE status = "online" 
+                                        ON user.username = room.owner WHERE room.status = "online" 
                                         AND private IS FALSE AND owner != ?`, username);
         return data;
     },
