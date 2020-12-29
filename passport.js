@@ -54,7 +54,7 @@ passport.use(
           } else {
             bcrypt.hash(password, 10).then(async (hash) => {
               await userModel
-                .add({ username, password: hash, nickname: "new_nickname" })
+                .add({ username, password: hash, nickname: "new_nickname" , email: "email", status: "inactivated"})
                 .then((result) => {
                   return cb(null, result, {
                     code: 0,

@@ -11,7 +11,7 @@ const helper = require("./helpers/helper");
 const passport = require("passport");
 const roomModel = require("./models/room.model");
 require("./passport");
-
+require("express-async-errors");
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -122,8 +122,8 @@ io.on("connection", (socket) => {
     const members = await roomMemberModel.loadByRoomId(room);
     members.forEach((m) => {
       const socket_m = socketMap.get(m.user_id);
-      if (socket_m && socket_m!==socket.id) {
-        io.to(socket_m).emit("get-turn", "continue")
+      if (socket_m && socket_m !== socket.id) {
+        io.to(socket_m).emit("get-turn", "continue");
       }
     });
   });
@@ -162,6 +162,12 @@ io.on("connection", (socket) => {
 });
 
 mdw(app);
+
+app.use((req, res, next, err) => {
+  console.log(err);
+  if (isNaN(err.code)) err = { code: 1, data: { message: "Internal error" } };
+  res.json(err);
+});
 
 server.listen(process.env.PORT || 8000, () => {
   console.log("Web server running at http://localhost:8000");
