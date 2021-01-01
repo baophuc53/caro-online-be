@@ -133,7 +133,6 @@ router.post("/login-other", async (req, res) => {
       email = payload.email;
       break;
     case "facebook":
-      let tempOpenId;
       await Axios.get("https://graph.facebook.com/debug_token?", {
         params: {
           input_token: token,
@@ -205,6 +204,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
   const { nickname, profile } = req.body;
   await userModel
     .add({
+      username: profile.email,
       nickname: nickname.nickname,
       email: profile.email,
       platform: profile.platform,
