@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const roomMemberModel = require("../models/room_member.model");
-const auth_jwt = require("../middlewares/auth.mdw")
+const userModel = require("../models/user.model");
+const auth_jwt = require("../middlewares/auth.mdw");
+const { async } = require("crypto-random-string");
 
 router.post("/join-room", auth_jwt, async (req, res) => {
   const user = req.user;
@@ -17,7 +19,12 @@ router.post("/join-room", auth_jwt, async (req, res) => {
   }
   await roomMemberModel
     .add(entity)
-    .then((response) => {
+    .then(async (response) => {
+      const entity = {
+        id: user.id,
+        played: user.played + 1
+      }
+      await userModel.editById(entity);
       res.json({
         code: 0,
         data: {

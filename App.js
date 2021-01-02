@@ -16,11 +16,10 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: config.dev.path,
-    credentials: true,
+    origin: '*',
   },
 });
-app.use(cors({ origin: config.dev.path, credentials: true }));
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cookieParser());
@@ -163,11 +162,11 @@ io.on("connection", (socket) => {
 
 mdw(app);
 
-app.use((req, res, next, err) => {
-  console.log(err);
-  if (isNaN(err.code)) err = { code: 1, data: { message: "Internal error" } };
-  res.json(err);
-});
+// app.use((req, res, next, err) => {
+//   console.log(err);
+//   if (isNaN(err.code)) err = { code: 1, data: { message: "Internal error" } };
+//   res.json(err);
+// });
 
 server.listen(process.env.PORT || 8000, () => {
   console.log("Web server running at http://localhost:8000");
