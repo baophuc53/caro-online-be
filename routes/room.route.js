@@ -23,6 +23,7 @@ router.post("/new-room", auth_jwt, async (req, res) => {
         data: {
           id: response.insertId,
           join_code: entity.join_code,
+          time: entity.time
         },
       });
     })
@@ -101,10 +102,12 @@ router.get("/", auth_jwt, async (req, res) => {
 router.get("/play", async (req, res) => {
   console.log(req.query);
   const rows = await roomModel.loadById(req.query.room_id);
+  rows[0].history.time = row[0].time;
   console.log(rows[0].history);
   res.json({
     code: 0,
     data: rows[0].history,
+    time: rows[0].time
   });
 });
 

@@ -81,7 +81,8 @@ io.on("connection", (socket) => {
       const inviteSocket = socketMap.get(inviteUser.id);
       const room = roomMap.get(socket.id);
       const user = userMap.get(socket.id);
-      io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
+      if (room && user)
+        io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
     }
   })
 

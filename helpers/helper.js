@@ -2,14 +2,15 @@ const jwt = require("jsonwebtoken");
 const cryptoRandomString = require("crypto-random-string");
 const roomModel = require("../models/room.model");
 const roomMemberModel = require("../models/room_member.model");
+const config = require("../config/config.json");
 module.exports = {
   getUserFromToken: (token) => {
-    const decoded = jwt.verify(token, "secret");
+    const decoded = jwt.verify(token, config.secret);
     return decoded.dat;
   },
 
   getIdFromToken: (token) => {
-    const decoded = jwt.verify(token, "secret");
+    const decoded = jwt.verify(token, config.secret);
     return decoded.dat.id;
   },
 
