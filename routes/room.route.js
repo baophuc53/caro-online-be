@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const roomModel = require("../models/room.model");
 const roomMemberModel = require("../models/room_member.model");
+const userModel = require("../models/user.model");
 const cryptoRandomString = require("crypto-random-string");
 const auth_jwt = require("../middlewares/auth.mdw");
 const helper = require("../helpers/helper");
@@ -77,6 +78,7 @@ router.post("/play", auth_jwt, async (req, res) => {
   
   if (helper.calculateWinner(req.body.data.square, req.body.data.move)) {
     await roomModel.setWinner(req.body.room_id, user.id);
+    await userModel.editById({id: user.id, won: user.won + 1});
     return res.json({
       code: 1,
       message: "win",

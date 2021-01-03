@@ -8,7 +8,8 @@ const Axios = require("axios");
 const config = require("../config/config.json");
 const nodemailer = require("nodemailer");
 const cryptoRandomString = require("crypto-random-string");
-const { async } = require("crypto-random-string");
+const auth_jwt = require("../middlewares/auth.mdw");
+const moment = require("moment");
 
 //login
 router.post("/", async (req, res) => {
@@ -81,10 +82,12 @@ router.put("/", async (req, res) => {
       });
     } else {
       req.logIn(result, async (err) => {
+        const join = new Date();
         const entity = {
           id: result.insertId,
           nickname: req.body.nickname,
           email: req.body.email,
+          time_join: join
         };
         console.log(entity);
         console.log(info);
@@ -133,7 +136,6 @@ router.post("/login-other", async (req, res) => {
       email = payload.email;
       break;
     case "facebook":
-      let tempOpenId;
       await Axios.get("https://graph.facebook.com/debug_token?", {
         params: {
           input_token: token,
@@ -205,6 +207,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
   const { nickname, profile } = req.body;
   await userModel
     .add({
+      username: profile.email,
       nickname: nickname.nickname,
       email: profile.email,
       platform: profile.platform,
@@ -385,4 +388,49 @@ router.post("/forgot-password/change-password", async (req, res) => {
   }
 });
 
+router.get("/get-nickname", auth_jwt, async (req, res) => {
+  if (req.user) {
+    console.log(req.user.nickname);
+    res.json({
+      code: 0,
+      data: {
+        nickname: req.user.nickname,
+      },
+    });
+  } else {
+    res.json({
+      code: 1,
+      data: {
+        message: "Not a valid user"
+      }
+    })
+  }
+});
+
+router.get("/user-info", auth_jwt, async (req, res) => {
+  const user = req.user
+  if (user) {
+    const entity = {
+      username: user.username,
+      nickname: user.nickname,
+      email: user.email,
+      day_join: moment(user.time_join).format("DD/MM/YYYY").toString(),
+      won: user.won,
+      played: user.played,
+    }
+    res.json({
+      code: 0,
+      data: {
+        info: entity,
+      },
+    });
+  } else {
+    res.json({
+      code: 1,
+      data: {
+        message: "Not a valid user"
+      }
+    })
+  }
+});
 module.exports = router;
