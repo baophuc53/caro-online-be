@@ -10,6 +10,7 @@ const roomMemberModel = require("./models/room_member.model");
 const helper = require("./helpers/helper");
 const passport = require("passport");
 const roomModel = require("./models/room.model");
+const userModel = require("./models/user.model");
 require("./passport");
 require("express-async-errors");
 const app = express();
@@ -124,6 +125,7 @@ io.on("connection", (socket) => {
       const socket_m = socketMap.get(m.user_id);
       if (socket_m && socket_m !== socket.id) {
         io.to(socket_m).emit("get-turn", "continue");
+        socket.broadcast.to(roomMap.get(socket.id)).emit("update-board", "continue");
       }
     });
   });
@@ -137,10 +139,13 @@ io.on("connection", (socket) => {
           io.to(socket_m).emit("get-turn", "lose")
         else {
           await roomModel.setWinner(roomMap.get(socket.id), m.user_id);
+          const user = await userModel.loadById(m.user_id);
+          await userModel.editById({id: user.id, won: user.won + 1});
           io.to(socket_m).emit("get-turn", "win");
         }
       }
     });
+    socket.broadcast.to(roomMap.get(socket.id)).emit("update-board", "end");
   })
 
   socket.on("disconnect", async () => {
