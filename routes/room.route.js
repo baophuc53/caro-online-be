@@ -5,6 +5,7 @@ const userModel = require("../models/user.model");
 const cryptoRandomString = require("crypto-random-string");
 const auth_jwt = require("../middlewares/auth.mdw");
 const helper = require("../helpers/helper");
+const config = require("../config/config.json")
 
 router.post("/new-room", auth_jwt, async (req, res) => {
   const entity = req.body;
@@ -78,7 +79,19 @@ router.post("/play", auth_jwt, async (req, res) => {
   
   if (helper.calculateWinner(req.body.data.square, req.body.data.move)) {
     await roomModel.setWinner(req.body.room_id, user.id);
-    await userModel.editById({id: user.id, won: user.won + 1});
+    let point = 0;
+    if (user) {
+      if (user.rank >= 0 && user.rank < config.rank.low) {
+        point = 3;
+      }
+      else if (user.rank >= config.rank.low && user.rank < config.rank.medium){
+        point = 2;
+      } else {
+        point = 1;
+      }
+    }
+    console.log(user.rank, point)
+    await userModel.editById({id: user.id, won: user.won + 1, rank: user.rank + point});
     return res.json({
       code: 1,
       message: "win",

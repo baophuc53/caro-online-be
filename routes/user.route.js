@@ -10,6 +10,7 @@ const nodemailer = require("nodemailer");
 const cryptoRandomString = require("crypto-random-string");
 const auth_jwt = require("../middlewares/auth.mdw");
 const moment = require("moment");
+const { async } = require("crypto-random-string");
 
 //login
 router.post("/", async (req, res) => {
@@ -87,7 +88,7 @@ router.put("/", async (req, res) => {
           id: result.insertId,
           nickname: req.body.nickname,
           email: req.body.email,
-          time_join: join
+          time_join: join,
         };
         console.log(entity);
         console.log(info);
@@ -401,14 +402,14 @@ router.get("/get-nickname", auth_jwt, async (req, res) => {
     res.json({
       code: 1,
       data: {
-        message: "Not a valid user"
-      }
-    })
+        message: "Not a valid user",
+      },
+    });
   }
 });
 
 router.get("/user-info", auth_jwt, async (req, res) => {
-  const user = req.user
+  const user = req.user;
   if (user) {
     const entity = {
       username: user.username,
@@ -417,7 +418,8 @@ router.get("/user-info", auth_jwt, async (req, res) => {
       day_join: moment(user.time_join).format("DD/MM/YYYY").toString(),
       won: user.won,
       played: user.played,
-    }
+      rank: user.rank,
+    };
     res.json({
       code: 0,
       data: {
@@ -428,7 +430,27 @@ router.get("/user-info", auth_jwt, async (req, res) => {
     res.json({
       code: 1,
       data: {
-        message: "Not a valid user"
+        message: "Not a valid user",
+      },
+    });
+  }
+});
+
+router.get("/get-top-rank", auth_jwt, async (req, res) => {
+  const toprank = await userModel.topRank();
+  if (toprank)
+  {
+    res.json({
+      code: 0,
+      data: {
+        toprank : toprank
+      }
+    })
+  } else {
+    res.json({
+      code: 1,
+      data: {
+        message: "Something went wrong !"
       }
     })
   }

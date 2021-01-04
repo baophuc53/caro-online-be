@@ -3,6 +3,9 @@ const cryptoRandomString = require("crypto-random-string");
 const roomModel = require("../models/room.model");
 const roomMemberModel = require("../models/room_member.model");
 const config = require("../config/config.json");
+const { async } = require("crypto-random-string");
+const userModel = require("../models/user.model");
+const e = require("express");
 module.exports = {
   getUserFromToken: (token) => {
     const decoded = jwt.verify(token, config.secret);
@@ -126,4 +129,5 @@ module.exports = {
     });
     return roomId;
   },
+
 };

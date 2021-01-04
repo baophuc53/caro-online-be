@@ -54,6 +54,7 @@ io.on("connection", (socket) => {
     }
     console.log(userArr);
     io.emit("send-online-user-list", userArr);
+    io.to(socket.id).emit("nickname", user.nickname);
   });
 
   socket.on("room", (room) => {
