@@ -11,6 +11,7 @@ const helper = require("./helpers/helper");
 const passport = require("passport");
 const roomModel = require("./models/room.model");
 const userModel = require("./models/user.model");
+const chatModel = require("./models/chat.model");
 require("./passport");
 require("express-async-errors");
 const app = express();
@@ -103,7 +104,7 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("cancel-quick-play", (messgae) => {
+  socket.on("cancel-quick-play", (message) => {
     console.log("cancel-quick-play");
     console.log(quickPlayArr);
     const user = userMap.get(socket.id);
@@ -113,9 +114,19 @@ io.on("connection", (socket) => {
     console.log(quickPlayArr);
   })
 
-  socket.on("send-chat-message", (data) => {
+  socket.on("send-chat-message", async (data) => {
     console.log("send-chat-message ", data);
-    socket.broadcast.to(roomMap.get(socket.id)).emit("chat-message", data);
+    const user = userMap.get(socket.id);
+    const entity = {
+      room_id: roomMap.get(socket.id), 
+      user_id: user.id,
+      chat_content: data
+    }
+    await chatModel.add(entity).then((response) => {
+      socket.broadcast.to(roomMap.get(socket.id)).emit("chat-message", data);
+    }).catch((err) => {
+      console.log(err);
+    })
   });
 
   socket.on("swap-turn", async (room) => {

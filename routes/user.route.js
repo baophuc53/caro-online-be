@@ -56,6 +56,7 @@ router.post("/", async (req, res) => {
             code: 0,
             data: {
               token,
+              nickname: user.nickname
             },
           });
         }
