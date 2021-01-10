@@ -149,7 +149,7 @@ router.put("/", async (req, res) => {
 
 router.put("/block/user/:id", async (req, res) => {
   const entity = {
-    status: "inactivated"
+    status: "block"
   }
   const condition = {
     id: req.params.id
