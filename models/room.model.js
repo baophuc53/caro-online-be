@@ -15,6 +15,14 @@ module.exports = {
         return data;
     },
 
+    loadAllByUser: async (userId) => {
+        const data = await db.load(`SELECT room.id, name_room, owner, time, user.nickname as winner, 
+                                    DATE_FORMAT(room.create_at,"%d-%m-%Y %r") as create_at
+                                    FROM user, room INNER JOIN room_member ON room.id = room_member.room_id
+                                    WHERE room_member.user_id = ? AND room.winner = user.id`, userId)
+        return data;
+    },
+
     loadById: async (id) => await db.load("SELECT * FROM room WHERE id = ?", id),
 
     loadByJoinCode: async(join_code) => {
