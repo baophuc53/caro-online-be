@@ -2,11 +2,11 @@ const router = require("express").Router();
 const adminModel = require("../models/admin.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const auth_jwt = require("../middlewares/auth.mdw");
+const auth_jwt = require("../middlewares/admin_auth.mdw");
 
 router.get("/user", auth_jwt, async (req, res) => {
   try {
-    const rows = await adminModel.loadByUserName();
+    const rows = await adminModel.load();
 
     return res.json({
       status: "SUCCESS",
@@ -102,8 +102,6 @@ router.post("/", async (req, res) => {
   const dat = await adminModel.loadByUserName(username);
   if (dat && (await bcrypt.compare(password, dat.password))) {
     const token = jwt.sign({ id: dat.id, username }, "secret");
-    req.session.token = token;
-    console.log(req.session);
     res.json({
       code: 0,
       data: {
@@ -149,7 +147,7 @@ router.put("/", async (req, res) => {
 
 router.put("/block/user/:id", async (req, res) => {
   const entity = {
-    status: "inactivated"
+    status: "block"
   }
   const condition = {
     id: req.params.id

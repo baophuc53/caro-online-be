@@ -2,10 +2,8 @@ const { async } = require("crypto-random-string");
 const db = require("../utils/db");
 
 module.exports = {
-  loadByUserName: async () => {
-    const row = await db.load("SELECT * FROM user");
-    return row;
-  },
+  load: () => db.load("SELECT * FROM user"),
+  loadByUserName: (username) => db.load("SELECT * FROM admin WHERE username = ? ",[username]).then(res=> res[0]),
   loadUserSearched: async (search) => {
     const dataSearch = "%" + search + "%";
     const row = await db.load(
