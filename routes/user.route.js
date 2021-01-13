@@ -11,6 +11,8 @@ const cryptoRandomString = require("crypto-random-string");
 const auth_jwt = require("../middlewares/auth.mdw");
 const moment = require("moment");
 const { async } = require("crypto-random-string");
+const roomModel = require("../models/room.model");
+const chatModel = require("../models/chat.model");
 
 //login
 router.post("/", async (req, res) => {
@@ -456,4 +458,35 @@ router.get("/get-top-rank", auth_jwt, async (req, res) => {
     })
   }
 });
+
+router.get("/history", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const rows = await roomModel.loadAllByUser(user.id);
+  res.json({
+    code: 0,
+    data: {rows}
+  })
+})
+
+router.get("/history/:id/chat", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const roomId = req.params.id;
+  const chat = await chatModel.loadChat(roomId);
+  res.json({
+    code: 0,
+    data: {chat}
+  })
+})
+
+router.get("/history/:id", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const roomId = req.params.id;
+  const room = await roomModel.loadById(roomId);
+  res.json({
+    code: 0,
+    data: {history: room[0].history}
+  })
+})
+
+
 module.exports = router;
