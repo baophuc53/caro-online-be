@@ -199,6 +199,7 @@ router.post("/login-other", async (req, res) => {
       code: 0,
       data: {
         token,
+        nickname: user.nickname
       },
     });
   }
@@ -231,6 +232,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
         code: 0,
         data: {
           token,
+          nickname: nickname.nickname
         },
       });
     });
