@@ -2,6 +2,99 @@ const router = require("express").Router();
 const adminModel = require("../models/admin.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const auth_jwt = require("../middlewares/auth.mdw");
+
+router.get("/user", auth_jwt, async (req, res) => {
+  try {
+    const rows = await adminModel.loadByUserName();
+
+    return res.json({
+      status: "SUCCESS",
+      data: rows,
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAIL",
+      data: {
+        message: "Something wrong!",
+      },
+    });
+  }
+});
+
+router.get("/room", auth_jwt, async (req, res) => {
+  try {
+    const rows = await adminModel.loadRoom();
+
+    return res.json({
+      status: "SUCCESS",
+      data: rows,
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAIL",
+      data: {
+        message: "Something wrong!",
+      },
+    });
+  }
+});
+
+router.get("/room/:id/chat", auth_jwt, async (req, res) => {
+  try {
+    const rows = await adminModel.loadChat(req.params.id);
+    return res.json({
+      status: "SUCCESS",
+      data: rows,
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAIL",
+      data: {
+        message: "Something wrong!",
+      },
+    });
+  }
+});
+
+router.get("/room/user/:id", auth_jwt, async (req, res) => {
+  const userId = req.params.id;
+  
+  try {
+    const rows = await adminModel.loadRoomByUserId(userId);
+    console.log("rows  ", rows);
+    return res.json({
+      status: "SUCCESS",
+      data: rows,
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAIL",
+      data: {
+        message: "Something wrong!",
+      },
+    });
+  }
+});
+
+router.post("/search", auth_jwt, async (req, res) => {
+  const { search } = req.body;
+  console.log("search ", search);
+  try {
+    const rows = await adminModel.loadUserSearched(search);
+    return res.json({
+      status: "SUCCESS",
+      data: rows,
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAILED",
+      data: {
+        message: "Failed to search",
+      },
+    });
+  }
+});
 
 //login
 router.post("/", async (req, res) => {
@@ -51,6 +144,33 @@ router.put("/", async (req, res) => {
         });
       });
   });
+});
+
+
+router.put("/block/user/:id", async (req, res) => {
+  const entity = {
+    status: "inactivated"
+  }
+  const condition = {
+    id: req.params.id
+  }
+  try {
+    await adminModel.blockUser(entity, condition);
+    console.log("block");
+    return res.json({
+      status: "SUCCESS",
+      data: {
+        message: "Blocked User Successfully",
+      },
+    });
+  } catch (err) {
+    return res.json({
+      status: "FAILED",
+      data: {
+        message: "Failed to block",
+      },
+    });
+  }
 });
 
 module.exports = router;
