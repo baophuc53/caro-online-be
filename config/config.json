@@ -8,7 +8,7 @@
         "port": 3306
     },
     "dev": {
-        "path": "http://localhost:3000"
+        "path": "https://play-caroo.herokuapp.com"
     },
     "google_client_id": "1041588848418-6sq7a6ls0452oea110hu0lrs6ld7pblq.apps.googleusercontent.com",
     "facebook_app_id": "308060157199741",
