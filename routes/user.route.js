@@ -43,7 +43,14 @@ router.post("/", async (req, res) => {
               email_token: email_token,
             },
           });
-        } else {
+        } else if (user.status === "block") {
+          res.json({
+            code: 4,
+            data: {
+              message: "You are block, please contact to admin for more infomation!"
+            }
+          })
+        }else{
           const token = jwt.sign(
             {
               dat: {
