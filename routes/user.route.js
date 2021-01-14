@@ -10,6 +10,9 @@ const nodemailer = require("nodemailer");
 const cryptoRandomString = require("crypto-random-string");
 const auth_jwt = require("../middlewares/auth.mdw");
 const moment = require("moment");
+const { async } = require("crypto-random-string");
+const roomModel = require("../models/room.model");
+const chatModel = require("../models/chat.model");
 
 //login
 router.post("/", async (req, res) => {
@@ -55,6 +58,7 @@ router.post("/", async (req, res) => {
             code: 0,
             data: {
               token,
+              nickname: user.nickname
             },
           });
         }
@@ -87,7 +91,7 @@ router.put("/", async (req, res) => {
           id: result.insertId,
           nickname: req.body.nickname,
           email: req.body.email,
-          time_join: join
+          time_join: join,
         };
         console.log(entity);
         console.log(info);
@@ -197,6 +201,7 @@ router.post("/login-other", async (req, res) => {
       code: 0,
       data: {
         token,
+        nickname: user.nickname
       },
     });
   }
@@ -229,6 +234,7 @@ router.post("/login-other/recieve-nickname", async (req, res) => {
         code: 0,
         data: {
           token,
+          nickname: nickname.nickname
         },
       });
     });
@@ -401,14 +407,14 @@ router.get("/get-nickname", auth_jwt, async (req, res) => {
     res.json({
       code: 1,
       data: {
-        message: "Not a valid user"
-      }
-    })
+        message: "Not a valid user",
+      },
+    });
   }
 });
 
 router.get("/user-info", auth_jwt, async (req, res) => {
-  const user = req.user
+  const user = req.user;
   if (user) {
     const entity = {
       username: user.username,
@@ -417,7 +423,8 @@ router.get("/user-info", auth_jwt, async (req, res) => {
       day_join: moment(user.time_join).format("DD/MM/YYYY").toString(),
       won: user.won,
       played: user.played,
-    }
+      rank: user.rank,
+    };
     res.json({
       code: 0,
       data: {
@@ -428,9 +435,60 @@ router.get("/user-info", auth_jwt, async (req, res) => {
     res.json({
       code: 1,
       data: {
-        message: "Not a valid user"
+        message: "Not a valid user",
+      },
+    });
+  }
+});
+
+router.get("/get-top-rank", auth_jwt, async (req, res) => {
+  const toprank = await userModel.topRank();
+  if (toprank)
+  {
+    res.json({
+      code: 0,
+      data: {
+        toprank : toprank
+      }
+    })
+  } else {
+    res.json({
+      code: 1,
+      data: {
+        message: "Something went wrong !"
       }
     })
   }
 });
+
+router.get("/history", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const rows = await roomModel.loadAllByUser(user.id);
+  res.json({
+    code: 0,
+    data: {rows}
+  })
+})
+
+router.get("/history/:id/chat", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const roomId = req.params.id;
+  const chat = await chatModel.loadChat(roomId);
+  res.json({
+    code: 0,
+    data: {chat}
+  })
+})
+
+router.get("/history/:id", auth_jwt, async (req, res) => {
+  const user = req.user;
+  const roomId = req.params.id;
+  const room = await roomModel.loadById(roomId);
+  res.json({
+    code: 0,
+    data: {history: room[0].history}
+  })
+})
+
+
 module.exports = router;

@@ -10,6 +10,8 @@ const roomMemberModel = require("./models/room_member.model");
 const helper = require("./helpers/helper");
 const passport = require("passport");
 const roomModel = require("./models/room.model");
+const userModel = require("./models/user.model");
+const chatModel = require("./models/chat.model");
 require("./passport");
 require("express-async-errors");
 const app = express();
@@ -53,6 +55,7 @@ io.on("connection", (socket) => {
     }
     console.log(userArr);
     io.emit("send-online-user-list", userArr);
+    io.to(socket.id).emit("nickname", user.nickname);
   });
 
   socket.on("room", (room) => {
@@ -80,7 +83,8 @@ io.on("connection", (socket) => {
       const inviteSocket = socketMap.get(inviteUser.id);
       const room = roomMap.get(socket.id);
       const user = userMap.get(socket.id);
-      io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
+      if (room && user)
+        io.to(inviteSocket).emit("invite-noti", {nickname: user.nickname, room});
     }
   })
 
@@ -100,7 +104,7 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("cancel-quick-play", (messgae) => {
+  socket.on("cancel-quick-play", (message) => {
     console.log("cancel-quick-play");
     console.log(quickPlayArr);
     const user = userMap.get(socket.id);
@@ -110,9 +114,19 @@ io.on("connection", (socket) => {
     console.log(quickPlayArr);
   })
 
-  socket.on("send-chat-message", (data) => {
+  socket.on("send-chat-message", async (data) => {
     console.log("send-chat-message ", data);
-    socket.broadcast.to(roomMap.get(socket.id)).emit("chat-message", data);
+    const user = userMap.get(socket.id);
+    const entity = {
+      room_id: roomMap.get(socket.id), 
+      user_id: user.id,
+      chat_content: data
+    }
+    await chatModel.add(entity).then((response) => {
+      socket.broadcast.to(roomMap.get(socket.id)).emit("chat-message", data);
+    }).catch((err) => {
+      console.log(err);
+    })
   });
 
   socket.on("swap-turn", async (room) => {
@@ -123,6 +137,7 @@ io.on("connection", (socket) => {
       const socket_m = socketMap.get(m.user_id);
       if (socket_m && socket_m !== socket.id) {
         io.to(socket_m).emit("get-turn", "continue");
+        socket.broadcast.to(roomMap.get(socket.id)).emit("update-board", "continue");
       }
     });
   });
@@ -136,10 +151,13 @@ io.on("connection", (socket) => {
           io.to(socket_m).emit("get-turn", "lose")
         else {
           await roomModel.setWinner(roomMap.get(socket.id), m.user_id);
+          const user = await userModel.loadById(m.user_id);
+          await userModel.editById({id: user.id, won: user.won + 1});
           io.to(socket_m).emit("get-turn", "win");
         }
       }
     });
+    socket.broadcast.to(roomMap.get(socket.id)).emit("update-board", "end");
   })
 
   socket.on("disconnect", async () => {

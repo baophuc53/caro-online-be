@@ -29,14 +29,21 @@ module.exports = {
   },
 
   editByEmail: (entity) => {
-    const condition = {email: entity.email};
+    const condition = { email: entity.email };
     delete entity.email;
     return db.patch("user", entity, condition);
   },
 
   loadByOpenId: ({ openId, platform }) =>
-    db.load(`SELECT * FROM user WHERE platform=? AND open_id=?`, [
-      platform,
-      openId,
-    ]).then(res=>res[0]),
+    db
+      .load(`SELECT * FROM user WHERE platform=? AND open_id=?`, [
+        platform,
+        openId,
+      ])
+      .then((res) => res[0]),
+
+  topRank: async () => {
+    const toprank = await db.load(`SELECT * FROM user ORDER BY user.rank DESC LIMIT 10 OFFSET 0`);
+    return toprank;
+  },
 };

@@ -1,6 +1,6 @@
 {
     "mysql": {
-        "connectionLimit": 150,
+        "connectionLimit": 200,
         "user": "YHp31sM2Ws",
         "database": "YHp31sM2Ws",
         "password": "xThZE8GWZ4",
@@ -13,5 +13,10 @@
     "google_client_id": "1041588848418-6sq7a6ls0452oea110hu0lrs6ld7pblq.apps.googleusercontent.com",
     "facebook_app_id": "308060157199741",
     "facebook_access_token": "308060157199741|hKRMpAmyOIXgzkUZJYIlwDyHQOI",
-    "secret": "secret"
+    "secret": "secret",
+    "rank": {
+        "low": 500,
+        "medium": 1000,
+        "high": 1500
+    }
 }
