@@ -3,7 +3,8 @@ const passportJWT = require("passport-jwt");
 const LocalStratrgy = require("passport-local").Strategy;
 const JWTStratrgy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
-const userModel = require("./models/user.model");
+const userModel = require("../models/user.model");
+const adminModel = require("../models/admin.model");
 const bcrypt = require("bcrypt");
 
 passport.use(
@@ -81,6 +82,22 @@ passport.use(
   new JWTStratrgy(opts, async (jwt_payload, cb) => {
     await userModel
       .loadById(jwt_payload.dat.id)
+      .then(user => {
+        if (user) {
+          cb(null, user);
+        } else {
+          cb(null, false);
+        }
+      })
+      .catch((err) => cb(err));
+  })
+);
+
+passport.use(
+  "admin-jwt",
+  new JWTStratrgy(opts, async (jwt_payload, cb) => {
+    await adminModel
+      .loadById(jwt_payload.id)
       .then(user => {
         if (user) {
           cb(null, user);

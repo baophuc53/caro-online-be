@@ -12,7 +12,7 @@ const passport = require("passport");
 const roomModel = require("./models/room.model");
 const userModel = require("./models/user.model");
 const chatModel = require("./models/chat.model");
-require("./passport");
+require("./config/passport");
 require("express-async-errors");
 const app = express();
 const server = require("http").createServer(app);
@@ -55,7 +55,6 @@ io.on("connection", (socket) => {
     }
     console.log(userArr);
     io.emit("send-online-user-list", userArr);
-    io.to(socket.id).emit("nickname", user.nickname);
   });
 
   socket.on("room", (room) => {
